@@ -1,1 +1,1 @@
-# Detecting-Threats-With-Microsoft-Sentinel
+# Detecting Threats With Microsoft Sentinel
