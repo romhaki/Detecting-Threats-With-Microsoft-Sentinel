@@ -226,93 +226,11 @@ In the ‘EventData’ section, we can find more useful information, such as the
   
  </details>
   
-  
-
    #
 <details>
 <summary>
   
-### Step 7: Creating Analytic Rule with KQL & Generating Scheduled Tasks   
-</summary>  
-<br/>
-Now, we can create analytic rules to be alerted about certain events. Upon the detection of a specified activity in our VM, an alert will be generated. In the analytics section of Microsoft Sentinel, there are various rule templates that may be used to automatically generate alerts. These are alerts built into the SIEM that we can start using to monitor our infrastructure. 
-  
-![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/be25c668-5029-4c34-b4f9-61be1aff7a83)
-
-  <strong> Scheduled Task and Persistence Techniques: </strong>
- 
-  In this lab, we will used the scheduled task/job technique to simulate tactics done by adversaries. While some scheduled tasks can be harmless, such as starting a non-malicious program, threat actors often use this functionality to establish persistence. The MITRE attack framework discusses this technique in detail <a href="https://attack.mitre.org/techniques/T1053/">here</a>.
-  
-As stated, “Adversaries may abuse task scheduling functionality to facilitate initial or recurring execution of malicious code. Utilities exist within all major operating systems to schedule programs or scripts to be executed at a specified date and time… Adversaries may use task scheduling to execute programs at system startup or on a scheduled basis for persistence.” While the scheduled task we will create is harmless, such actions may be associated with malicious intent by threat actors." 
- 
-  In this lab, our scheduled task will not be malicious as we will be creating a scheduled task that opens a browser at a specific time. However, we will create an analytic rule that will monitor for this type of event so that we will be alerted in the SIEM about this kind of action.
-
-  Since it is not enabled by default, we need to enable logging for a scheduled task creation. In our VM, we can open the ‘Local Security Policy’ application. Under ‘Advanced Audit Policy Configuration’ and ‘System Audit Policies’, we can select 'Object Access’. From here, select ‘Audit Other Object Access Events’ and enable both ‘success’ and ‘failure’ as shown. After completing this step, logging will be enabled for scheduled task events. 
-  
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/9b31418d-c038-476f-9ba1-648d6b4257d5)
-
-  <strong> Creating the Scheduled Task: </strong>
-  
-  Finally, scheduling a task in Windows 10 can be done by opening the ‘Task Scheduler’ application and using the ‘Create Task’ feature. 
-  
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/a1c99243-b94b-4a65-83ff-f14100fbd5d1)
-
-  Under Triggers, set a time in the future. Under actions, we can set an action to start a program. In this example, I have chosen to start Microsoft Edge.
-  
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/5da52314-da5d-4fe6-8e4f-4bea9234de98)
-
-  The scheduled task creation will now also show up in the Security section of 'Event Viewer' in the VM with an Event ID of 4698. Now, we can create the analytic rule to alert us about this in our SIEM.
-  
-  <strong> Writing the analytic rule using KQL: </strong>
-  In this step, we will use a KQL query to alert us when a scheduled task is created.
-Note that when we run the query in the Logs section of the workspace, specific events can be expanded to show the ‘EventData’.  
-  
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/6ba76b10-d4b9-4732-a8d4-e5dda6a80be0)
-In the ‘EventData’ section, we can find more useful information, such as the scheduled tasks name, the ClientProcessID, the username of the account that the task was created on, and more. We can use the 'parse' command in our KQL query to extract data from the 'EventData' Field that we find important, and use the 'project' command to display the data fields as columns:
-  ```
-  SecurityEvent                            
- | where EventID == 4698
- | parse EventData with * '<Data Name="SubjectUserName">' User '</Data>' *
- | parse EventData with * '<Data Name="TaskName">' NameofScheuduledTask '</Data>' *
- | parse EventData with * '<Data Name="ClientProcessId">' ClientProcessID '</Data>' *
- | project Computer, TimeGenerated, ClientProcessID, NameofScheuduledTask, User
-  ```
-  Under Results, this will now show us the Computer, Time Generated, the ClientProcessID, the name of the task that was scheduled, and the User. Thus, we can generate Event Data and place it into its own category for readability. This may be beneficial for the analyst investigating the logs. 
-  
-  We will now use this KQL logic to alert us when new scheduled tasks are created. Navigate back to Microsoft Sentinel, open the analytics workspace previously created. Open  ‘Analytics’ and click ‘Create’ to find the option to create a ‘Scheduled query rule’.
-  We will create a new scheduled rule as follows:
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/57062fc5-0670-4d8b-a8e0-bfc7382a5e1a)
-  
-  For the rule logic, use the KQL query that was created to extract our desired information: 
-  
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/973f06c3-da99-41c0-861e-4b18498354cc)
-  
-  We will also utilize Alert Enrichment. The purpose of this is to provide more relevant context to our alerts.
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/ea293791-b835-4019-8417-1eb285a813bc)
-
-  Under query scheduling, set the query to run every 5 minutes. It is 5 hours by default:
-  
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/93fec7d2-8810-45e0-9930-f303e507e641)
-
-  The full configuration for the scheduled rule is as follows: 
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/bbf83ef8-8a7b-409a-9726-3345f3166e02)
-
-  
-  After creating this rule, we can create another task in the Windows VM as before, and the alert will be triggered in Microsoft Sentinel. Once more tasks are created, we can view the occurrences in the ‘Incidents’ page of Microsoft Sentinel.
-  ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/639c4d72-4042-403e-8489-5c135c4a1a24)
-
-  Since we utilized entity mapping when creating the scheduled rule, we can also see the information such as the user, machine name, task name, and the process ID which would help in an investigative process. The security analyst could now use this information along with other tools to evaluate the alert. 
-  
- </details>
-  
-  
-  
-  
-   #
-<details>
-<summary>
-  
-### Step 8: Using the MITRE ATT&CK Framework   
+### Step 7: Using the MITRE ATT&CK Framework   
 </summary>  
 <br/>
 The observed MITRE ATT&CK tactic that we have detected using the Microsoft Sentinel SIEM in this lab is <a href="https://attack.mitre.org/tactics/TA0003/">TA0003 Persistence</a>. This tactic is used by threat actors to maintain access to systems despite system restarts, changed credentials, or other events that could remove their access from systems. We can use the MITRE ATT&CK Framework to narrow down the specific technique a potential threat actor may be using in this lab, and we can identify the technique and sub-technique as <a href="https://attack.mitre.org/techniques/T1053/005/">T1053.005</a>.
