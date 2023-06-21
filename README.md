@@ -36,8 +36,7 @@ In this lab we will:
 Now, enable JIT on the VM being used for the project:
 
 
-
-![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/c753890f-815a-46d5-ba66-73e9b4b7e7a2)
+![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/fc98a287-e2b0-4c16-a8ff-d2554c5666bd)
 
 
   From here, we can navigate to the settings page for our VM, and in the 'Connect' pane select ‘My IP’ as the Source IP and Request access.
