@@ -254,9 +254,9 @@ The observed MITRE ATT&CK tactic that we have detected using the Microsoft Senti
 
   
   <strong> Detection </strong>
-  By logging specific Windows Event IDs with the help of Microsoft Sentinel, we were able to detect this activity. The MITRE ATT&CK Framework also outlines some recommendations by Microsoft for detection. 
+  By logging specific Windows Event IDs with the help of Microsoft Sentinel, we were able to detect this activity. The MITRE ATT&CK Framework also outlines recommendations for detection. 
   
- ![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/da3860d1-9fff-43f8-9dec-b5c7f80f021c)
+![image](https://github.com/romhaki/Detecting-Threats-With-Microsoft-Sentinel/assets/136436650/1941d435-a09f-42fb-a595-e475f63cc8de)
 
 
   
